@@ -1,11 +1,10 @@
 # Define the GoFile page URL
 $gofilePageUrl = "https://gofile.io/d/L38srC"
 
-# Get the GoFile page content
+Write-Host "Fetching GoFile page..."
 $page = Invoke-WebRequest -Uri $gofilePageUrl
 
-# Extract the actual file download link from the page content
-# GoFile usually puts the direct download link in a JSON object in the page
+Write-Host "Extracting direct download link..."
 $downloadUrl = ($page.Content | Select-String -Pattern '"link":"(https:[^"]+)"').Matches.Groups[1].Value
 
 if (-not $downloadUrl) {
@@ -13,10 +12,28 @@ if (-not $downloadUrl) {
     exit 1
 }
 
+Write-Host "Found download link: $downloadUrl"
+
 # Define output file name (change as needed)
 $outputFile = "megabonk.zip"
 
-# Download the file
-Invoke-WebRequest -Uri $downloadUrl -OutFile $outputFile
+Write-Host "Starting download..."
 
-Write-Host "Downloaded to $outputFile"
+# Setup progress bar parameters
+$webClient = New-Object System.Net.WebClient
+
+$webClient.DownloadProgressChanged += {
+    param($sender, $e)
+    Write-Progress -Activity "Downloading megabonk.zip" -Status "$($e.ProgressPercentage)% Complete" -PercentComplete $e.ProgressPercentage
+}
+
+$webClient.DownloadFileCompleted += {
+    Write-Host "`nDownload completed! File saved as $outputFile"
+}
+
+$webClient.DownloadFileAsync($downloadUrl, $outputFile)
+
+# Wait for download to complete
+while ($webClient.IsBusy) {
+    Start-Sleep -Milliseconds 200
+}
