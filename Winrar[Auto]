@@ -1,0 +1,16 @@
+# install-winrar.ps1
+# PowerShell script to download and silently install WinRAR
+
+# Download WinRAR installer (64-bit)
+$winrarUrl = "https://www.rarlab.com/rar/winrar-x64-623.exe"
+$installerPath = "$env:TEMP\winrar-installer.exe"
+
+Invoke-WebRequest -Uri $winrarUrl -OutFile $installerPath
+
+# Install WinRAR silently
+Start-Process -FilePath $installerPath -ArgumentList "/S" -Wait
+
+# Remove installer after installation
+Remove-Item $installerPath -Force
+
+Write-Host "WinRAR has been installed successfully."
